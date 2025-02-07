@@ -12,7 +12,7 @@ class Loader:
         combined_df = pd.DataFrame()
         try:
             for file in os.listdir(self.file_path):
-                temp_df = pd.read_csv("../data/" + file, sep="\t", header=None, on_bad_lines="skip")
+                temp_df = pd.read_csv("../data/" + file, sep="\t", header=None, on_bad_lines="skip", compression="infer")
                 combined_df = pd.concat([combined_df, temp_df])
             return combined_df
         except Exception as error:
