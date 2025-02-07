@@ -4,11 +4,11 @@ import os
 
 
 class Loader:
-    def __init__(self, file_path):
+    def __init__(self, file_path:str):
         self.file_path = file_path
 
 
-    def load_data(self):
+    def load_data(self)-> pd.DataFrame:
         combined_df = pd.DataFrame()
         try:
             for file in os.listdir(self.file_path):
