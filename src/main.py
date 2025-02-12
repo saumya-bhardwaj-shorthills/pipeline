@@ -15,7 +15,7 @@ def main():
         filter = Filter(transformed_data)
         filtered_data = filter.find_rows_by_event_id(event_id)
         product_list = filter.segregate_product_list_item(filtered_data)
-        new_df = filter.newdataframe(product_list)
+        new_df = filter.fetch_product_detail(product_list)
         print(new_df)
     except Exception as error:
         print(f"Error occurred: {error}")
