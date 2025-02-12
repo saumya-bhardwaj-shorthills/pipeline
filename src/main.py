@@ -14,6 +14,7 @@ def main():
         transformed_data = transform.drop_columns()
         filter = Filter(transformed_data)
         filtered_data = filter.find_rows_by_event_id(event_id)
+        print(filtered_data)
     except Exception as error:
         print(f"Error occurred: {error}")
 
