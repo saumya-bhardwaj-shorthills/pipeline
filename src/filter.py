@@ -11,4 +11,8 @@ class Filter:
         event_id_filtered_df = df[df['post-event-list'].apply(lambda x: event_id in x.split(','))]
         return event_id_filtered_df
 
-
+    def segregate_product_list_item(self, event_filtered_df: pd.DataFrame)-> pd.DataFrame:
+        # Segregate post-product-list based on post-event-list 
+        event_filtered_df['post-product-list'] = event_filtered_df['post-product-list'].apply(lambda x: x.split(','))
+        segregated_post_product_list_df = event_filtered_df.explode(column=["post-product-list"])
+        return segregated_post_product_list_df

@@ -14,7 +14,8 @@ def main():
         transformed_data = transform.drop_columns()
         filter = Filter(transformed_data)
         filtered_data = filter.find_rows_by_event_id(event_id)
-        print(filtered_data)
+        product_list = filter.segregate_product_list_item(filtered_data)
+        print(product_list)
     except Exception as error:
         print(f"Error occurred: {error}")
 
