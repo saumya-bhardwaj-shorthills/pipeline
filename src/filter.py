@@ -1,11 +1,11 @@
 import pandas as pd
-import re
-import gc
+import traceback
 
 class Filter:
     def __init__(self, df: pd.DataFrame, chunk_size=100000):
         self.df = df
         self.chunk_size = chunk_size  # Process data in chunks
+        self.product_lsit = []
 
     def find_rows_by_event_id(self, event_id: str) -> pd.DataFrame:
         df = self.df
@@ -17,61 +17,55 @@ class Filter:
         segregated_post_product_list_df = event_filtered_df.explode(column=["post-product-list"])
         return segregated_post_product_list_df
 
-    def process_chunk(self, chunk: pd.DataFrame) -> pd.DataFrame:        
-        def extract_fields(row):
-            parts = row.split(';')
+    def fetch_product_detail(self, chunk: pd.DataFrame)->pd.DataFrame:
+        chunk.loc[:, 'post-product-list'] = chunk['post-product-list'].apply(lambda x: x.split(';'))
+        chunk.apply(lambda x : self.extract_fields(x['post-product-list'], x['url']), axis=1)
 
-            dealer_id = parts[0] if len(parts) > 0 else ""
-            ad_id = parts[1] if len(parts) > 1 else ""
+        product_info = pd.DataFrame(self.product_lsit)
 
-            event_data = parts[3] if len(parts) > 3 else ""
-            unknown_data = parts[4] if len(parts) > 4 else ""
+        return product_info
+        
 
-            impression_event_id = ""
-            impression_count = 0 
+    def extract_fields(self, product_arr, url):
 
-            if event_data:
-                for event in event_data.split('|'):
-                    event_parts = event.split('=')
-                    if len(event_parts) == 2:
-                        impression_event_id = event_parts[0]
-                        try:
-                            impression_count = int(event_parts[1])
-                        except ValueError:
-                            impression_count = 0
-                        break
-
-            return dealer_id, ad_id, impression_event_id, impression_count, unknown_data
-
-        chunk[['dealer_id', 'ad_id', 'impression_event_id', 'impression_count', 'unknown_data']] = (
-            chunk['post-product-list'].map(lambda x: extract_fields(str(x))).apply(pd.Series)
-        )
-
-        chunk.drop(columns=['post-product-list'], inplace=True)
-        gc.collect()
-
-        def extract_website(url):
-            match = re.search(r'https?://(?:www\.)?([\w\-]+\.\w+)', str(url))
-            return match.group(1) if match else ""
-
-        chunk['website'] = chunk['url'].map(extract_website)
-
-        chunk.drop(columns=['url'], inplace=True)
-        gc.collect()
-
-        chunk['impression_count'] = chunk['impression_count'].astype(int)
-
-        return chunk[['dealer_id', 'ad_id', 'impression_event_id', 'impression_count', 'unknown_data', 'website']]
-
-    def fetch_product_detail(self, dataframe) -> pd.DataFrame:
-        result_chunks = []
-
-        for i in range(0, len(dataframe), self.chunk_size):
-            chunk = dataframe.iloc[i:i+self.chunk_size].copy()
-            processed_chunk = self.process_chunk(chunk)
-            result_chunks.append(processed_chunk)
-
-            del chunk, processed_chunk
-            gc.collect()
-        final_df = pd.concat(result_chunks, ignore_index=True)
-        return final_df
+        product_dict = {
+            "dealer_id": '',
+            "Ad_id" : '',
+            "Impression_count": '',
+            "Website": '', 
+            "other_data": ''
+        }
+        try:
+            if len(product_arr) > 0 and product_arr[0]:
+                product_dict['dealer_id'] = product_arr[0]
+            else:
+                pass
+            if len(product_arr) > 1 and product_arr[1]:
+                product_dict['Ad_id'] = product_arr[1]
+            else:
+                pass
+            if len(product_arr) > 4 and product_arr[4] and '|' in product_arr[4]:
+                product_arr_info = product_arr[4].split('|')
+                if len(product_arr_info) > 0 and product_arr_info[0] and '=' in product_arr_info[0]:
+                    product_arr_info_impression_count = product_arr_info[0].split('=')
+                    if product_arr_info_impression_count[-1]:
+                        product_dict['Impression_count'] = product_arr_info_impression_count[-1]
+                    else:
+                        pass
+                else:
+                    pass
+            else:
+                pass
+            if url and '/' in url:
+                parsed_url = url.split('/')
+                if parsed_url[2] and '.' in parsed_url[2]:
+                    website_url = parsed_url[2].split('.')
+                    if website_url[1]:
+                        product_dict['Website'] = website_url[1]
+                    else:
+                        pass
+                else:
+                    pass
+            self.product_lsit.append(product_dict)
+        except:
+            traceback.print_exc()
