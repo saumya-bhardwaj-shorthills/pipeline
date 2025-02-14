@@ -1,4 +1,5 @@
 import pandas as pd
+import gc
 
 class Transform:
     def __init__(self, df:pd.DataFrame):
@@ -11,6 +12,7 @@ class Transform:
         return self.df
     def drop_columns(self)-> pd.DataFrame:
         self.df.drop(["unknownA", "unknownB"], axis=1, inplace=True)
+        gc.collect()
         return self.df
     
     
