@@ -11,7 +11,7 @@ class Loader:
     def load_data(self):
         try:
             for file in os.listdir(self.file_path):
-                for chunk in pd.read_csv("../data/" + file, sep="\t", header=None, dtype= str, on_bad_lines="skip", compression="infer", chunksize=100000):
-                    yield chunk
+                chunk = pd.read_csv("../data/" + file, sep="\t", header=None, dtype= str, usecols=[1,2,4], on_bad_lines="skip", compression="infer")
+                yield chunk
         except Exception as error:
             raise error
